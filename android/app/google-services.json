@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "762916541173",
+    "project_id": "mypocket-621cc",
+    "storage_bucket": "mypocket-621cc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:762916541173:android:a710950dd93b7f4a86abbc",
+        "android_client_info": {
+          "package_name": "com.mypocket"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCeEXnG1zVjsXxTWLZPXPgI3KCyI7JHwLA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
