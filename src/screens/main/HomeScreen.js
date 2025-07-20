@@ -144,10 +144,10 @@ export default function HomeScreen({ navigation }) {
           <View className="h-6 bg-primary-400 rounded mb-2 w-32" />
           <View className="h-8 bg-primary-400 rounded w-48" />
         </View>
-        <View className="flex-1 bg-white rounded-t-3xl p-6">
-          <View className="h-32 bg-gray-200 rounded-2xl mb-6" />
-          <View className="h-20 bg-gray-200 rounded-2xl mb-6" />
-          <View className="h-40 bg-gray-200 rounded-2xl" />
+        <View className="flex-1 bg-app-background rounded-t-3xl p-6">
+          <View className="h-32 bg-gray-200 rounded-2xl mb-6 animate-pulse" />
+          <View className="h-20 bg-gray-200 rounded-2xl mb-6 animate-pulse" />
+          <View className="h-40 bg-gray-200 rounded-2xl animate-pulse" />
         </View>
       </View>
     );
@@ -183,17 +183,17 @@ export default function HomeScreen({ navigation }) {
 
         {/* Balance Card */}
         <View
-          className="bg-white rounded-3xl p-6 shadow-floating"
+          className="bg-white rounded-3xl p-6"
           style={{
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.15,
-            shadowRadius: 20,
+            shadowOpacity: 0.12,
+            shadowRadius: 24,
             elevation: 10,
           }}
         >
           <View className="items-center mb-4">
-            <Text className="text-app-textSecondary text-base mb-2">
+            <Text className="text-gray-500 text-base mb-2 font-medium">
               Current Balance
             </Text>
             <Text
@@ -237,7 +237,7 @@ export default function HomeScreen({ navigation }) {
 
       {/* Main Content */}
       <Animated.View
-        className="flex-1 bg-white rounded-t-3xl"
+        className="flex-1 bg-app-background rounded-t-3xl"
         style={{ opacity: fadeAnim }}
       >
         <ScrollView
@@ -248,67 +248,65 @@ export default function HomeScreen({ navigation }) {
           showsVerticalScrollIndicator={false}
         >
           <View className="p-6">
-            {/* Quick Actions - Enhanced Design */}
+            {/* Quick Actions - Refined Design */}
             <View className="mb-8">
               <Text className="text-app-text text-xl font-bold mb-4">
                 Quick Actions
               </Text>
               <View className="flex-row justify-between">
                 <TouchableOpacity
-                  className="flex-1 bg-gradient-to-r from-success-500 to-success-600 p-6 rounded-2xl mr-3"
+                  className="flex-1 bg-white p-6 rounded-2xl mr-3 border border-success-200"
                   onPress={() => navigation.navigate('Add', { type: 'income' })}
                   style={{
-                    backgroundColor: '#10B981',
                     shadowColor: '#10B981',
-                    shadowOffset: { width: 0, height: 6 },
-                    shadowOpacity: 0.3,
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.08,
                     shadowRadius: 12,
-                    elevation: 8,
+                    elevation: 4,
                   }}
                 >
                   <View className="items-center">
-                    <View className="bg-white bg-opacity-20 w-14 h-14 rounded-full items-center justify-center mb-3">
+                    <View className="bg-success-50 w-14 h-14 rounded-2xl items-center justify-center mb-3">
                       <MaterialIcons
                         name="arrow-upward"
                         size={28}
-                        color="#000000"
+                        color="#059669"
                       />
                     </View>
-                    <Text className="text-white font-bold text-base">
+                    <Text className="text-app-text font-bold text-base mb-1">
                       Add Income
                     </Text>
-                    <Text className="text-success-100 text-sm mt-1">
+                    <Text className="text-app-textSecondary text-sm text-center">
                       Track earnings
                     </Text>
                   </View>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  className="flex-1 bg-gradient-to-r from-error-500 to-error-600 p-6 rounded-2xl ml-3"
+                  className="flex-1 bg-white p-6 rounded-2xl ml-3 border border-error-200"
                   onPress={() =>
                     navigation.navigate('Add', { type: 'expense' })
                   }
                   style={{
-                    backgroundColor: '#EF4444',
                     shadowColor: '#EF4444',
-                    shadowOffset: { width: 0, height: 6 },
-                    shadowOpacity: 0.3,
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.08,
                     shadowRadius: 12,
-                    elevation: 8,
+                    elevation: 4,
                   }}
                 >
                   <View className="items-center">
-                    <View className="bg-white bg-opacity-20 w-14 h-14 rounded-full items-center justify-center mb-3">
+                    <View className="bg-error-50 w-14 h-14 rounded-2xl items-center justify-center mb-3">
                       <MaterialIcons
                         name="arrow-downward"
                         size={28}
-                        color="#000000"
+                        color="#DC2626"
                       />
                     </View>
-                    <Text className="text-white font-bold text-base">
+                    <Text className="text-app-text font-bold text-base mb-1">
                       Add Expense
                     </Text>
-                    <Text className="text-error-100 text-sm mt-1">
+                    <Text className="text-app-textSecondary text-sm text-center">
                       Track spending
                     </Text>
                   </View>
@@ -322,11 +320,11 @@ export default function HomeScreen({ navigation }) {
                 This Month
               </Text>
               <View
-                className="bg-gray-50 rounded-2xl p-5 border border-gray-100"
+                className="bg-white rounded-2xl p-5 border border-app-border"
                 style={{
                   shadowColor: '#000',
                   shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.05,
+                  shadowOpacity: 0.04,
                   shadowRadius: 8,
                   elevation: 2,
                 }}
@@ -334,38 +332,38 @@ export default function HomeScreen({ navigation }) {
                 <View className="flex-row justify-between items-center">
                   <View className="flex-1 items-center">
                     <Text className="text-app-textSecondary text-sm font-medium">
-                      Monthly Income
+                      Income
                     </Text>
-                    <Text className="text-success-600 text-xl font-bold mt-1">
+                    <Text className="text-success-600 text-lg font-bold mt-1">
                       {formatCurrency(summary.thisMonthIncome)}
                     </Text>
                   </View>
 
                   <View
-                    className="w-px bg-gray-300 mx-6"
+                    className="w-px bg-app-border mx-6"
                     style={{ height: 40 }}
                   />
 
                   <View className="flex-1 items-center">
                     <Text className="text-app-textSecondary text-sm font-medium">
-                      Monthly Expenses
+                      Expenses
                     </Text>
-                    <Text className="text-error-600 text-xl font-bold mt-1">
+                    <Text className="text-error-600 text-lg font-bold mt-1">
                       {formatCurrency(summary.thisMonthExpenses)}
                     </Text>
                   </View>
 
                   <View
-                    className="w-px bg-gray-300 mx-6"
+                    className="w-px bg-app-border mx-6"
                     style={{ height: 40 }}
                   />
 
                   <View className="flex-1 items-center">
                     <Text className="text-app-textSecondary text-sm font-medium">
-                      Net Savings
+                      Savings
                     </Text>
                     <Text
-                      className={`text-xl font-bold mt-1 ${
+                      className={`text-lg font-bold mt-1 ${
                         summary.thisMonthIncome - summary.thisMonthExpenses >= 0
                           ? 'text-success-600'
                           : 'text-error-600'
@@ -388,7 +386,7 @@ export default function HomeScreen({ navigation }) {
                 </Text>
                 <TouchableOpacity
                   onPress={() => navigation.navigate('Wallet')}
-                  className="flex-row items-center bg-primary-50 px-3 py-2 rounded-full"
+                  className="flex-row items-center bg-primary-50 px-4 py-2 rounded-xl border border-primary-200"
                 >
                   <Text className="text-primary-600 font-semibold mr-1 text-sm">
                     View All
@@ -403,13 +401,13 @@ export default function HomeScreen({ navigation }) {
 
               {recentTransactions.length > 0 ? (
                 <View
-                  className="bg-white rounded-2xl border border-gray-100"
+                  className="bg-white rounded-2xl border border-app-border"
                   style={{
                     shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.08,
-                    shadowRadius: 12,
-                    elevation: 4,
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.04,
+                    shadowRadius: 8,
+                    elevation: 2,
                   }}
                 >
                   {recentTransactions.map((transaction, index) => {
@@ -425,13 +423,13 @@ export default function HomeScreen({ navigation }) {
                           activeOpacity={0.7}
                         >
                           <View
-                            className={`w-14 h-14 rounded-2xl items-center justify-center mr-4 ${
+                            className={`w-12 h-12 rounded-xl items-center justify-center mr-4 ${
                               transaction.type === 'income'
-                                ? 'bg-success-100'
-                                : 'bg-error-100'
+                                ? 'bg-success-50'
+                                : 'bg-error-50'
                             }`}
                           >
-                            <Text className="text-2xl">
+                            <Text className="text-xl">
                               {categoryData.icon}
                             </Text>
                           </View>
@@ -442,7 +440,7 @@ export default function HomeScreen({ navigation }) {
                             </Text>
                             {transaction.description && (
                               <Text
-                                className="text-app-textSecondary text-sm mt-1"
+                                className="text-app-textSecondary text-sm mt-0.5"
                                 numberOfLines={1}
                               >
                                 {transaction.description}
@@ -455,7 +453,7 @@ export default function HomeScreen({ navigation }) {
 
                           <View className="items-end">
                             <Text
-                              className={`font-bold text-lg ${
+                              className={`font-bold text-base ${
                                 transaction.type === 'income'
                                   ? 'text-success-600'
                                   : 'text-error-600'
@@ -468,7 +466,7 @@ export default function HomeScreen({ navigation }) {
                         </TouchableOpacity>
 
                         {index < recentTransactions.length - 1 && (
-                          <View className="border-b border-gray-100 ml-18" />
+                          <View className="border-b border-app-border ml-16" />
                         )}
                       </View>
                     );
@@ -476,16 +474,16 @@ export default function HomeScreen({ navigation }) {
                 </View>
               ) : (
                 <View
-                  className="bg-white rounded-2xl p-8 border border-gray-100 items-center"
+                  className="bg-white rounded-2xl p-8 border border-app-border items-center"
                   style={{
                     shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.08,
-                    shadowRadius: 12,
-                    elevation: 4,
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.04,
+                    shadowRadius: 8,
+                    elevation: 2,
                   }}
                 >
-                  <View className="bg-gray-100 w-16 h-16 rounded-full items-center justify-center mb-4">
+                  <View className="bg-gray-100 w-16 h-16 rounded-2xl items-center justify-center mb-4">
                     <MaterialCommunityIcons
                       name="receipt-outline"
                       size={32}
@@ -495,9 +493,8 @@ export default function HomeScreen({ navigation }) {
                   <Text className="text-app-text text-lg font-semibold mb-2">
                     No transactions yet
                   </Text>
-                  <Text className="text-app-textSecondary text-center mb-6 leading-5">
-                    Start tracking your expenses by adding your first
-                    transaction
+                  <Text className="text-app-textSecondary text-center mb-6 leading-5 px-4">
+                    Start tracking your finances by adding your first transaction
                   </Text>
                   <TouchableOpacity
                     className="bg-primary-500 px-8 py-3 rounded-xl"
@@ -505,9 +502,9 @@ export default function HomeScreen({ navigation }) {
                     style={{
                       shadowColor: '#3B82F6',
                       shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.3,
+                      shadowOpacity: 0.2,
                       shadowRadius: 8,
-                      elevation: 6,
+                      elevation: 4,
                     }}
                   >
                     <Text className="text-white font-semibold">
@@ -518,7 +515,7 @@ export default function HomeScreen({ navigation }) {
               )}
             </View>
 
-            {/* Quick Stats Cards - Enhanced with proper spacing */}
+            {/* Quick Stats Cards - Refined with proper spacing */}
             {summary.transactionCount > 0 && (
               <View className="mb-6">
                 <Text className="text-app-text text-xl font-bold mb-4">
@@ -526,66 +523,66 @@ export default function HomeScreen({ navigation }) {
                 </Text>
                 <View className="flex-row justify-between">
                   <View
-                    className="flex-1 bg-primary-50 p-5 rounded-2xl border border-primary-100 mr-3"
+                    className="flex-1 bg-white p-5 rounded-2xl border border-primary-100 mr-3"
                     style={{
                       shadowColor: '#3B82F6',
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.1,
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.04,
                       shadowRadius: 8,
-                      elevation: 3,
+                      elevation: 2,
                     }}
                   >
-                    <View className="flex-row items-center justify-between mb-2">
+                    <View className="flex-row items-center justify-between mb-3">
                       <MaterialCommunityIcons
                         name="format-list-numbered"
                         size={24}
                         color="#3B82F6"
                       />
-                      <View className="bg-primary-500 w-6 h-6 rounded-full items-center justify-center">
+                      <View className="bg-primary-100 w-6 h-6 rounded-full items-center justify-center">
                         <MaterialIcons
                           name="trending-up"
-                          size={14}
-                          color="#FFFFFF"
+                          size={12}
+                          color="#3B82F6"
                         />
                       </View>
                     </View>
-                    <Text className="text-primary-700 text-2xl font-bold mb-1">
+                    <Text className="text-app-text text-2xl font-bold mb-1">
                       {summary.transactionCount}
                     </Text>
-                    <Text className="text-primary-600 text-sm font-medium">
+                    <Text className="text-app-textSecondary text-sm">
                       Total Transactions
                     </Text>
                   </View>
 
                   <TouchableOpacity
-                    className="flex-1 bg-warning-50 p-5 rounded-2xl border border-warning-100 ml-3"
+                    className="flex-1 bg-white p-5 rounded-2xl border border-warning-100 ml-3"
                     onPress={() => navigation.navigate('Analytics')}
                     style={{
                       shadowColor: '#F59E0B',
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.1,
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.04,
                       shadowRadius: 8,
-                      elevation: 3,
+                      elevation: 2,
                     }}
                   >
-                    <View className="flex-row items-center justify-between mb-2">
+                    <View className="flex-row items-center justify-between mb-3">
                       <MaterialCommunityIcons
                         name="chart-pie"
                         size={24}
                         color="#F59E0B"
                       />
-                      <View className="bg-warning-500 w-6 h-6 rounded-full items-center justify-center">
+                      <View className="bg-warning-100 w-6 h-6 rounded-full items-center justify-center">
                         <MaterialIcons
                           name="visibility"
-                          size={14}
-                          color="#FFFFFF"
+                          size={12}
+                          color="#F59E0B"
                         />
                       </View>
                     </View>
-                    <Text className="text-warning-700 text-2xl font-bold mb-1">
+                    <Text className="text-app-text text-2xl font-bold mb-1">
                       {Object.keys(summary.expensesByCategory || {}).length}
                     </Text>
-                    <Text className="text-warning-600 text-sm font-medium">
+                    <Text className="text-app-textSecondary text-sm">
                       Categories Used
                     </Text>
                   </TouchableOpacity>
@@ -594,7 +591,7 @@ export default function HomeScreen({ navigation }) {
             )}
 
             {/* Bottom Spacing for Tab Bar */}
-            <View className="h-6" />
+            <View className="h-8" />
           </View>
         </ScrollView>
       </Animated.View>
