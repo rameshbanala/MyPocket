@@ -22,11 +22,13 @@ import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '../../utils/categories';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useFocusEffect } from '@react-navigation/native';
+import hybridFirebaseService from '../../services/hybridFirebaseService';
+import NetInfo from '@react-native-community/netinfo';
 
 const { width } = Dimensions.get('window');
 
 export default function HomeScreen({ navigation }) {
-  const { user } = useAuth();
+  const { user, initialSyncCompleted } = useAuth();
 
   // State management
   const [summary, setSummary] = useState({
@@ -41,6 +43,8 @@ export default function HomeScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  const [isOnline, setIsOnline] = useState(false);
+
   // Animation values
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(50));
@@ -50,6 +54,14 @@ export default function HomeScreen({ navigation }) {
     StatusBar.setBackgroundColor('#3B82F6', true);
   }, []);
 
+  // Network status listener
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setIsOnline(state.isConnected);
+    });
+    return unsubscribe;
+  }, []);
+
   // Fetch data function
   const fetchData = async (isRefresh = false) => {
     try {
@@ -57,8 +69,8 @@ export default function HomeScreen({ navigation }) {
 
       // Fetch financial summary and recent transactions
       const [summaryData, transactionsData] = await Promise.all([
-        getFinancialSummary(user.uid),
-        getTransactions(user.uid, 10), // Get last 10 transactions
+        hybridFirebaseService.getFinancialSummary(user.uid),
+        hybridFirebaseService.getTransactions(user.uid, 10),
       ]);
 
       setSummary(summaryData);
@@ -152,9 +164,41 @@ export default function HomeScreen({ navigation }) {
       </View>
     );
   }
+  if (!initialSyncCompleted) {
+    return (
+      <View className="flex-1 bg-primary-500">
+        <View className="px-6 py-8">
+          <Text className="text-white text-2xl font-bold mb-2">
+            Setting up your data...
+          </Text>
+          <Text className="text-primary-100">
+            Syncing your transactions from cloud
+          </Text>
+        </View>
+        <View className="flex-1 bg-app-background rounded-t-3xl items-center justify-center">
+          <View className="bg-primary-100 w-16 h-16 rounded-full items-center justify-center mb-4">
+            <Text className="text-primary-500 text-2xl">☁️</Text>
+          </View>
+          <Text className="text-app-text text-lg font-semibold mb-2">
+            Syncing Data
+          </Text>
+          <Text className="text-app-textSecondary text-center px-8">
+            We're getting your latest transactions ready. This won't take long!
+          </Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-primary-500">
+      {!isOnline && (
+        <View className="bg-warning-500 px-4 py-2">
+          <Text className="text-white text-center text-sm font-medium">
+            📱 Offline Mode - Changes will sync when online
+          </Text>
+        </View>
+      )}
       {/* Header Section */}
       <Animated.View
         className="px-6 py-8"
@@ -429,9 +473,7 @@ export default function HomeScreen({ navigation }) {
                                 : 'bg-error-50'
                             }`}
                           >
-                            <Text className="text-xl">
-                              {categoryData.icon}
-                            </Text>
+                            <Text className="text-xl">{categoryData.icon}</Text>
                           </View>
 
                           <View className="flex-1">
@@ -494,7 +536,8 @@ export default function HomeScreen({ navigation }) {
                     No transactions yet
                   </Text>
                   <Text className="text-app-textSecondary text-center mb-6 leading-5 px-4">
-                    Start tracking your finances by adding your first transaction
+                    Start tracking your finances by adding your first
+                    transaction
                   </Text>
                   <TouchableOpacity
                     className="bg-primary-500 px-8 py-3 rounded-xl"

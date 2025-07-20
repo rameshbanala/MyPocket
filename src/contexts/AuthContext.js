@@ -1,13 +1,7 @@
-// src/contexts/AuthContext.js
+// src/contexts/AuthContext.js (Updated with User Session Management)
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getApp } from '@react-native-firebase/app';
-import {
-  getAuth,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-} from '@react-native-firebase/auth';
+import auth from '@react-native-firebase/auth';
+import hybridFirebaseService from '../services/hybridFirebaseService';
 
 const AuthContext = createContext({});
 
@@ -22,51 +16,77 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [initialSyncCompleted, setInitialSyncCompleted] = useState(false);
 
   useEffect(() => {
-    const app = getApp();
-    const auth = getAuth(app);
+    const unsubscribe = auth().onAuthStateChanged(async firebaseUser => {
+      console.log(
+        '🔐 Auth state changed:',
+        firebaseUser ? 'User logged in' : 'User logged out',
+      );
 
-    console.log('Firebase Auth initialized (v22):', auth);
+      if (firebaseUser) {
+        // User logged in - initialize their session
+        try {
+          setUser(firebaseUser);
+          console.log('👤 Initializing user session...');
 
-    const unsubscribe = onAuthStateChanged(auth, user => {
-      console.log('Auth state changed:', user);
-      setUser(user);
+          const userStatus = await hybridFirebaseService.initializeUser(
+            firebaseUser.uid,
+          );
+
+          if (userStatus.needsInitialSync) {
+            console.log('🔄 First time user - initial sync in progress...');
+            setInitialSyncCompleted(false);
+            // Initial sync happens automatically in hybridFirebaseService
+            // We'll set this to true after a reasonable delay
+            setTimeout(() => {
+              setInitialSyncCompleted(true);
+            }, 3000);
+          } else {
+            console.log('✅ Returning user - data available locally');
+            setInitialSyncCompleted(true);
+          }
+        } catch (error) {
+          console.error('❌ Error initializing user session:', error);
+          setInitialSyncCompleted(true); // Allow app to continue
+        }
+      } else {
+        // User logged out
+        if (user) {
+          console.log('🚪 User logged out, cleaning up session...');
+          await hybridFirebaseService.handleUserLogout();
+        }
+        setUser(null);
+        setInitialSyncCompleted(false);
+      }
+
       setLoading(false);
     });
 
     return unsubscribe;
-  }, []);
+  }, [user]);
 
   const signIn = async (email, password) => {
     try {
-      const app = getApp();
-      const auth = getAuth(app);
-      await signInWithEmailAndPassword(auth, email, password);
+      await auth().signInWithEmailAndPassword(email, password);
     } catch (error) {
-      console.error('Sign in error:', error);
       throw error;
     }
   };
 
   const signUp = async (email, password) => {
     try {
-      const app = getApp();
-      const auth = getAuth(app);
-      await createUserWithEmailAndPassword(auth, email, password);
+      await auth().createUserWithEmailAndPassword(email, password);
     } catch (error) {
-      console.error('Sign up error:', error);
       throw error;
     }
   };
 
   const handleSignOut = async () => {
     try {
-      const app = getApp();
-      const auth = getAuth(app);
-      await signOut(auth);
+      await auth().signOut();
     } catch (error) {
-      console.error('Sign out error:', error);
       throw error;
     }
   };
@@ -74,6 +94,7 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     loading,
+    initialSyncCompleted,
     signIn,
     signUp,
     signOut: handleSignOut,

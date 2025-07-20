@@ -1,6 +1,6 @@
-/* eslint-disable react/no-unstable-nested-components */
-// src/screens/main/AddTransactionScreen.js
-import React, { useState } from 'react';
+/* eslint-disable react-hooks/exhaustive-deps */
+// src/screens/main/EditTransactionScreen.js
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,66 +8,111 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
-  Animated,
   Modal,
   StatusBar,
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
-import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '../../utils/categories';
-import { addTransaction } from '../../services/firebaseService';
 import hybridFirebaseService from '../../services/hybridFirebaseService';
+import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '../../utils/categories';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import DatePicker from 'react-native-date-picker';
 
-export default function AddTransactionScreen({ navigation }) {
+export default function EditTransactionScreen({ route, navigation }) {
   const { user } = useAuth();
+  const { transactionId } = route.params;
 
   // Form state
+  const [originalTransaction, setOriginalTransaction] = useState(null);
   const [transactionType, setTransactionType] = useState('expense');
   const [amount, setAmount] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [description, setDescription] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   // UI state
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [slideAnim] = useState(new Animated.Value(0));
+  const [hasChanges, setHasChanges] = useState(false);
 
   React.useEffect(() => {
     StatusBar.setBarStyle('light-content', true);
     StatusBar.setBackgroundColor('#3B82F6', true);
   }, []);
 
-  const categories =
-    transactionType === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
+  // Load transaction data
+  useEffect(() => {
+    loadTransaction();
+  }, [transactionId]);
+
+  // Check for changes
+  useEffect(() => {
+    if (originalTransaction) {
+      const hasChanged =
+        transactionType !== originalTransaction.type ||
+        parseFloat(amount || 0) !== originalTransaction.amount ||
+        selectedCategory?.id !== originalTransaction.category ||
+        description !== (originalTransaction.description || '') ||
+        selectedDate.getTime() !== new Date(originalTransaction.date).getTime();
+      setHasChanges(hasChanged);
+    }
+  }, [
+    transactionType,
+    amount,
+    selectedCategory,
+    description,
+    selectedDate,
+    originalTransaction,
+  ]);
+
+  const loadTransaction = async () => {
+    try {
+      setLoading(true);
+      const transaction = await hybridFirebaseService.getTransactionById(
+        transactionId,
+        user.uid,
+      );
+
+      if (!transaction) {
+        Alert.alert('Error', 'Transaction not found', [
+          { text: 'OK', onPress: () => navigation.goBack() },
+        ]);
+        return;
+      }
+
+      // Set form data
+      setOriginalTransaction(transaction);
+      setTransactionType(transaction.type);
+      setAmount(transaction.amount.toString());
+      setDescription(transaction.description || '');
+      setSelectedDate(new Date(transaction.date));
+
+      // Find and set category
+      const categories =
+        transaction.type === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
+      const category = categories.find(cat => cat.id === transaction.category);
+      setSelectedCategory(category);
+    } catch (error) {
+      console.error('Error loading transaction:', error);
+      Alert.alert('Error', 'Failed to load transaction data', [
+        { text: 'OK', onPress: () => navigation.goBack() },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleTypeSwitch = type => {
-    setTransactionType(type);
-    setSelectedCategory(null);
-    Animated.timing(slideAnim, {
-      toValue: type === 'expense' ? 0 : 1,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const handleCategorySelect = category => {
-    setSelectedCategory(category);
-    setShowCategoryModal(false);
-  };
-
-  const handleSubmit = async () => {
-    if (!amount || !selectedCategory) {
-      Alert.alert(
-        'Missing Information',
-        'Please fill in amount and select a category',
-      );
-      return;
+    if (type !== transactionType) {
+      setTransactionType(type);
+      setSelectedCategory(null); // Reset category when switching type
     }
+  };
 
-    if (parseFloat(amount) <= 0) {
+  const handleSave = async () => {
+    // Validation
+    if (!amount || parseFloat(amount) <= 0) {
       Alert.alert(
         'Invalid Amount',
         'Please enter a valid amount greater than 0',
@@ -75,10 +120,20 @@ export default function AddTransactionScreen({ navigation }) {
       return;
     }
 
-    setLoading(true);
+    if (!selectedCategory) {
+      Alert.alert('Missing Category', 'Please select a category');
+      return;
+    }
+
+    if (!hasChanges) {
+      Alert.alert('No Changes', 'No changes were made to save');
+      return;
+    }
+
+    setSaving(true);
 
     try {
-      const transactionData = {
+      const updateData = {
         type: transactionType,
         amount: parseFloat(amount),
         category: selectedCategory.id,
@@ -86,66 +141,57 @@ export default function AddTransactionScreen({ navigation }) {
         categoryIcon: selectedCategory.icon,
         description: description.trim(),
         date: selectedDate,
-        userId: user.uid,
       };
 
-     const transactionId = await hybridFirebaseService.addTransaction(
-      user.uid, 
-      transactionData
-    );
+      // Validate data
+      const validation =
+        hybridFirebaseService.validateTransactionData(updateData);
+      if (!validation.isValid) {
+        Alert.alert('Validation Error', validation.errors.join('\n'));
+        return;
+      }
 
-      console.log('Transaction added successfully with ID:', transactionId);
+      await hybridFirebaseService.updateTransaction(
+        transactionId,
+        user.uid,
+        updateData,
+      );
 
+      Alert.alert('✅ Success!', 'Transaction updated successfully', [
+        {
+          text: 'OK',
+          onPress: () => navigation.goBack(),
+        },
+      ]);
+    } catch (error) {
+      console.error('Error updating transaction:', error);
+      Alert.alert('Error', 'Failed to update transaction. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDiscard = () => {
+    if (hasChanges) {
       Alert.alert(
-        '✅ Success!',
-        `${transactionType === 'expense' ? 'Expense' : 'Income'} of ₹${amount} added successfully`,
+        'Discard Changes?',
+        'You have unsaved changes. Are you sure you want to discard them?',
         [
+          { text: 'Keep Editing', style: 'cancel' },
           {
-            text: 'Add Another',
-            onPress: resetForm,
-          },
-          {
-            text: 'Go to Home',
-            onPress: () => navigation.navigate('Home'),
-            style: 'default',
+            text: 'Discard',
+            style: 'destructive',
+            onPress: () => navigation.goBack(),
           },
         ],
       );
-    } catch (error) {
-      console.error('Error adding transaction:', error);
-      Alert.alert(
-        'Error',
-        'Failed to add transaction. Please check your internet connection and try again.',
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const resetForm = () => {
-    setAmount('');
-    setSelectedCategory(null);
-    setDescription('');
-    setSelectedDate(new Date());
-  };
-
-  const formatDate = date => {
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    if (date.toDateString() === today.toDateString()) {
-      return 'Today';
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return 'Yesterday';
     } else {
-      return date.toLocaleDateString('en-IN', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-      });
+      navigation.goBack();
     }
   };
+
+  const categories =
+    transactionType === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
 
   const CategoryModal = () => (
     <Modal
@@ -156,7 +202,6 @@ export default function AddTransactionScreen({ navigation }) {
     >
       <View className="flex-1 bg-black bg-opacity-50 justify-end">
         <View className="bg-white rounded-t-3xl" style={{ height: '75%' }}>
-          {/* Modal Header */}
           <View className="flex-row justify-between items-center p-6 border-b border-gray-100">
             <Text className="text-xl font-bold text-app-text">
               Select {transactionType === 'expense' ? 'Expense' : 'Income'}{' '}
@@ -170,31 +215,23 @@ export default function AddTransactionScreen({ navigation }) {
             </TouchableOpacity>
           </View>
 
-          {/* Categories Grid */}
           <ScrollView
             className="flex-1 px-4"
-            contentContainerStyle={{ paddingBottom: 20 }}
             showsVerticalScrollIndicator={false}
           >
             <View className="flex-row flex-wrap justify-between pt-4">
               {categories.map(category => (
                 <TouchableOpacity
                   key={category.id}
-                  onPress={() => handleCategorySelect(category)}
+                  onPress={() => {
+                    setSelectedCategory(category);
+                    setShowCategoryModal(false);
+                  }}
                   className={`w-[48%] mb-4 p-4 rounded-2xl border-2 ${
                     selectedCategory?.id === category.id
                       ? 'border-primary-500 bg-primary-50'
                       : 'border-gray-200 bg-gray-50'
                   }`}
-                  style={{
-                    shadowColor:
-                      selectedCategory?.id === category.id ? '#3B82F6' : '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity:
-                      selectedCategory?.id === category.id ? 0.15 : 0.05,
-                    shadowRadius: 4,
-                    elevation: selectedCategory?.id === category.id ? 3 : 1,
-                  }}
                 >
                   <Text className="text-3xl mb-2">{category.icon}</Text>
                   <Text
@@ -225,25 +262,51 @@ export default function AddTransactionScreen({ navigation }) {
     </Modal>
   );
 
+  if (loading) {
+    return (
+      <View className="flex-1 bg-primary-500">
+        <View className="px-6 py-8">
+          <Text className="text-white text-xl font-bold">Loading...</Text>
+        </View>
+        <View className="flex-1 bg-white rounded-t-3xl items-center justify-center">
+          <Text className="text-app-textSecondary">
+            Loading transaction data...
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View className="flex-1 bg-primary-500">
       {/* Header */}
-      <View className="px-6 py-6">
+      <View className="px-6 py-8">
         <View className="flex-row items-center justify-between">
           <TouchableOpacity
-            onPress={() => navigation.goBack()}
+            onPress={handleDiscard}
             className="bg-primary-600 w-12 h-12 rounded-full items-center justify-center"
           >
             <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
           </TouchableOpacity>
 
-          <Text className="text-white text-xl font-bold">Add Transaction</Text>
+          <Text className="text-white text-xl font-bold">Edit Transaction</Text>
 
           <TouchableOpacity
-            onPress={resetForm}
-            className="bg-primary-600 w-12 h-12 rounded-full items-center justify-center"
+            onPress={handleSave}
+            disabled={saving || !hasChanges}
+            className={`px-4 py-2 rounded-xl ${
+              hasChanges && !saving ? 'bg-white' : 'bg-primary-600'
+            }`}
           >
-            <MaterialIcons name="refresh" size={24} color="#FFFFFF" />
+            <Text
+              className={`font-semibold ${
+                hasChanges && !saving
+                  ? 'text-primary-500'
+                  : 'text-white opacity-50'
+              }`}
+            >
+              {saving ? 'Saving...' : 'Save'}
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -312,14 +375,6 @@ export default function AddTransactionScreen({ navigation }) {
                   />
                 </View>
               </View>
-              {amount && parseFloat(amount) > 0 && (
-                <Text className="text-app-textSecondary text-sm mt-2">
-                  {parseFloat(amount).toLocaleString('en-IN', {
-                    style: 'currency',
-                    currency: 'INR',
-                  })}
-                </Text>
-              )}
             </View>
 
             {/* Category Selection */}
@@ -365,14 +420,8 @@ export default function AddTransactionScreen({ navigation }) {
                 <View className="flex-row items-center">
                   <MaterialIcons name="event" size={24} color="#3B82F6" />
                   <Text className="text-app-text font-semibold text-base ml-3">
-                    {formatDate(selectedDate)}
+                    {selectedDate.toLocaleDateString('en-IN')}
                   </Text>
-                  {selectedDate.toDateString() !==
-                    new Date().toDateString() && (
-                    <Text className="text-app-textSecondary text-sm ml-2">
-                      ({selectedDate.toLocaleDateString('en-IN')})
-                    </Text>
-                  )}
                 </View>
                 <MaterialIcons
                   name="keyboard-arrow-down"
@@ -403,74 +452,54 @@ export default function AddTransactionScreen({ navigation }) {
               </Text>
             </View>
 
-            {/* Quick Amount Buttons */}
-            <View className="mb-8">
-              <Text className="text-app-text font-semibold text-lg mb-3">
-                Quick Amount
-              </Text>
-              <View className="flex-row flex-wrap">
-                {['100', '500', '1000', '2000', '5000', '10000'].map(
-                  quickAmount => (
-                    <TouchableOpacity
-                      key={quickAmount}
-                      className={`border rounded-xl px-4 py-2 mr-3 mb-3 ${
-                        amount === quickAmount
-                          ? 'bg-primary-500 border-primary-500'
-                          : 'bg-primary-50 border-primary-200'
-                      }`}
-                      onPress={() => setAmount(quickAmount)}
-                    >
-                      <Text
-                        className={`font-medium ${
-                          amount === quickAmount
-                            ? 'text-white'
-                            : 'text-primary-600'
-                        }`}
-                      >
-                        ₹{quickAmount}
-                      </Text>
-                    </TouchableOpacity>
-                  ),
-                )}
+            {/* Changes Indicator */}
+            {hasChanges && (
+              <View className="bg-warning-50 border border-warning-200 rounded-xl p-4 mb-6">
+                <View className="flex-row items-center">
+                  <MaterialIcons name="edit" size={20} color="#F59E0B" />
+                  <Text className="text-warning-700 font-medium ml-2">
+                    You have unsaved changes
+                  </Text>
+                </View>
               </View>
-            </View>
+            )}
           </View>
         </ScrollView>
 
-        {/* Submit Button */}
+        {/* Bottom Actions */}
         <View className="p-6 bg-white border-t border-gray-100">
-          <TouchableOpacity
-            className={`${
-              transactionType === 'expense' ? 'bg-error-500' : 'bg-success-500'
-            } rounded-2xl py-4 items-center shadow-soft ${
-              loading || !amount || !selectedCategory
-                ? 'opacity-50'
-                : 'opacity-100'
-            }`}
-            onPress={handleSubmit}
-            disabled={loading || !amount || !selectedCategory}
-            style={{
-              shadowColor:
-                transactionType === 'expense' ? '#EF4444' : '#10B981',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: !amount || !selectedCategory ? 0 : 0.3,
-              shadowRadius: 8,
-              elevation: !amount || !selectedCategory ? 0 : 6,
-            }}
-          >
-            <Text className="text-white text-lg font-semibold">
-              {loading
-                ? 'Adding Transaction...'
-                : `Add ${transactionType === 'expense' ? 'Expense' : 'Income'}`}
-            </Text>
-          </TouchableOpacity>
+          <View className="flex-row space-x-4">
+            <TouchableOpacity
+              className="flex-1 bg-gray-100 py-4 rounded-2xl items-center"
+              onPress={handleDiscard}
+            >
+              <Text className="text-app-text font-semibold text-lg">
+                Cancel
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              className={`flex-1 py-4 rounded-2xl items-center ${
+                hasChanges && !saving
+                  ? transactionType === 'expense'
+                    ? 'bg-error-500'
+                    : 'bg-success-500'
+                  : 'bg-gray-300'
+              }`}
+              onPress={handleSave}
+              disabled={!hasChanges || saving}
+            >
+              <Text className="text-white font-semibold text-lg">
+                {saving ? 'Updating...' : 'Update Transaction'}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 
-      {/* Category Selection Modal */}
+      {/* Modals */}
       <CategoryModal />
 
-      {/* Date Picker Modal */}
       <DatePicker
         modal
         open={showDatePicker}
@@ -481,12 +510,8 @@ export default function AddTransactionScreen({ navigation }) {
           setShowDatePicker(false);
           setSelectedDate(date);
         }}
-        onCancel={() => {
-          setShowDatePicker(false);
-        }}
+        onCancel={() => setShowDatePicker(false)}
         title="Select Transaction Date"
-        confirmText="Select"
-        cancelText="Cancel"
       />
     </View>
   );

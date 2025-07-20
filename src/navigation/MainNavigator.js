@@ -6,6 +6,8 @@ import { createStackNavigator } from '@react-navigation/stack';
 import HomeScreen from '../screens/main/HomeScreen';
 import AnalyticsScreen from '../screens/main/AnalyticsScreen';
 import AddTransactionScreen from '../screens/main/AddTransactionScreen';
+import EditTransactionScreen from '../screens/main/EditTransactionScreen';
+
 import WalletScreen from '../screens/main/WalletScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
 import CustomTabBar from '../components/navigation/CustomTabBar';
@@ -34,6 +36,11 @@ export default function MainNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="MainTabs" component={MainTabs} />
+      <Stack.Screen
+        name="EditTransaction"
+        component={EditTransactionScreen}
+        options={{ headerShown: false }}
+      />
     </Stack.Navigator>
   );
 }
