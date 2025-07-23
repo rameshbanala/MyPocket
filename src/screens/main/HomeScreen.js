@@ -28,7 +28,8 @@ import NetInfo from '@react-native-community/netinfo';
 const { width } = Dimensions.get('window');
 
 export default function HomeScreen({ navigation }) {
-  const { user, initialSyncCompleted } = useAuth();
+  const { user, userProfile, initialSyncCompleted } = useAuth();
+  
 
   // State management
   const [summary, setSummary] = useState({
@@ -213,8 +214,12 @@ export default function HomeScreen({ navigation }) {
               Welcome back,
             </Text>
             <Text className="text-white text-2xl font-bold">
-              {user?.email?.split('@')[0]?.charAt(0)?.toUpperCase() +
-                user?.email?.split('@')[0]?.slice(1) || 'User'}
+              {(
+                userProfile?.name ||
+                user?.displayName ||
+                user?.email?.split('@')[0] ||
+                'User'
+              ).replace(/^./, c => c.toUpperCase())}
             </Text>
           </View>
           <TouchableOpacity

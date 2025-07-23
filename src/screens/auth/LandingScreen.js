@@ -13,8 +13,11 @@ export default function LandingScreen({ navigation }) {
     <SafeAreaView className="flex-1 bg-white">
       <View className="flex-1 justify-center items-center px-8">
         {/* Logo/Icon Section */}
-        <View className="bg-primary-50 w-32 h-32 rounded-full items-center justify-center mb-8">
-          <Text className="text-primary-500 text-6xl">💰</Text>
+        <View className="w-32 h-32 rounded-full items-center justify-center mb-8">
+          <Image
+            source={require('../../assets/logo.png')}
+            className='w-32 h-32'
+          />
         </View>
 
         {/* Welcome Text */}
@@ -57,7 +60,7 @@ export default function LandingScreen({ navigation }) {
           </TouchableOpacity>
 
           <TouchableOpacity
-            className="bg-primary-50 py-4 rounded-2xl border border-primary-200"
+            className="bg-primary-50 py-4 rounded-2xl border mt-3 border-primary-200"
             onPress={() => navigation.navigate('Login')}
           >
             <Text className="text-primary-600 text-lg font-semibold text-center">

@@ -50,6 +50,7 @@ export default function LoginScreen({ navigation }) {
             <TextInput
               className="bg-app-surface border border-app-border rounded-xl px-4 py-4 text-app-text"
               placeholder="Enter your email"
+              placeholderTextColor="#9CA3AF" // Tailwind's text-gray-400
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -62,6 +63,7 @@ export default function LoginScreen({ navigation }) {
             <TextInput
               className="bg-app-surface border border-app-border rounded-xl px-4 py-4 text-app-text"
               placeholder="Enter your password"
+              placeholderTextColor="#9CA3AF"
               value={password}
               onChangeText={setPassword}
               secureTextEntry
